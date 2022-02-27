@@ -1,1 +1,2 @@
-__pycache__
+amusepark/utils/__pycache__/
+*.egg-info/

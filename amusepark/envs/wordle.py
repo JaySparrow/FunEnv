@@ -4,7 +4,7 @@ from gym import spaces
 import os
 import numpy as np
 
-from text_attr import Background
+from amusepark.utils.text_attr import Background
 
 GUESS_NUM = 6
 
@@ -161,7 +161,8 @@ class WordleEnv(gym.Env):
         pass
 
 if __name__ == '__main__':
-    env = WordleEnv('wordle-hidden.txt', guess_num=GUESS_NUM)
+    from amusepark.utils.path import data_path
+    env = WordleEnv(os.path.join(data_path, 'wordle-hidden.txt'), guess_num=GUESS_NUM)
     obs = env.reset()
     env.render()
     for i in range(env.guess_num):
