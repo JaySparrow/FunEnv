@@ -154,10 +154,10 @@ class WordleEnv(gym.Env):
                 elif c == 1: prefix = Background.BROWN
                 elif c == 0: prefix = Background.LIGHT_GRAY
                 else: prefix = Background.BLACK
-                print(prefix + w, end='')
+                print(prefix + w, end="")
             print(Background.RESET)
         
-    def close (self):
+    def close(self):
         pass
 
 if __name__ == '__main__':
