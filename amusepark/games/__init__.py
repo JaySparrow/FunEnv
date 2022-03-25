@@ -1,0 +1,1 @@
+from amusepark.games.puzzle import APuzzleADay, Calendar, Board, Piece

@@ -24,7 +24,7 @@ COLORS = [Background.LIGHT_RED, Background.LIGHT_GREEN, Background.LIGHT_BLUE, B
 
 class MoveArrowEnv(gym.Env):
     """Custom Environment that follows gym interface"""
-    metadata = {'render.modes': ['human', 'terminal']}
+    metadata = {'render.modes': ['terminal']}
 
     def __init__(self):
         super(MoveArrowEnv, self).__init__()
@@ -304,3 +304,6 @@ if __name__ == '__main__':
         obs, r, done, info = env.step(act)
         env.render()
         print("reward = ", r)
+        if done:
+            print("done")
+            break

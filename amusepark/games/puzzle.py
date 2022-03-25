@@ -1,5 +1,5 @@
 import numpy as np
-from amusepark.games.puzzle_configs import PIECES, BOARD, CALENDAR, COLORS, MONTH
+from amusepark.configs.puzzle_configs import PIECES, BOARD, CALENDAR, COLORS, MONTH
 from amusepark.utils.text_attr import Background
 
 class Piece:
