@@ -4,37 +4,31 @@ from gym import spaces
 import numpy as np
 
 from amusepark.utils.text_attr import Background
-
-###### meta's: symbolic indicators on maps ######
-GOAL = EMPTY = 0
-# directions
-UP = 1
-RIGHT = 2
-DOWN = 3
-LEFT = 4
-DIRECTIONS = {UP: (-1, 0), RIGHT: (0, 1), DOWN: (1, 0), LEFT: (0, -1)}
-SYMBOLS = {UP: u'\u2191', RIGHT: u'\u2192', DOWN: u'\u2193', LEFT: u'\u2190'}
-# arrows encoding: 
-#   definitions start from 5
-#   {arrow_i goal_pos, arrow_i cur_pos_UP, arrow_i cur_pos_RIGHT, arrow_i cur_pos_DOWN, arrow_i cur_pos_LEFT} 
-# = {5 + 5i          , 6 + 5i            , 7 + 5i               , 8 + 5i              , 9 + 5i} 
-#   for i = 0, 1, 2, ...
-ARROW_FEATURE_NUM = 5
-COLORS = [Background.LIGHT_RED, Background.LIGHT_GREEN, Background.LIGHT_BLUE, Background.YELLOW]
+from amusepark.configs.isoland_configs import *
 
 class MoveArrowEnv(gym.Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['terminal']}
 
-    def __init__(self):
+    def __init__(self, env_config: dict=ENV_CONFIG_0):
         super(MoveArrowEnv, self).__init__()
 
-        # env parameters
-        self.H = 7
-        self.W = 8
-        num_arrows = 3
+        self.env_config = env_config
 
-        # observation/state space: see meta's
+        ### init ###
+        # load env config as a state
+        self.H, self.W, self.state = self.__load_config(env_config)
+
+        # get arrows dict
+        #   arrow idx -> [arrow dir, arrow pos]
+        self.arrows = self._get_arrows()
+        num_arrows = len(self.arrows)
+
+        # init step counter
+        self.step_counter = 0
+
+        ### define spaces ###
+        # observation/state space (see meta's of isoland_configs.py)
         #   1st layer: fixed map landmarks (i.e. env direction signs + arrow goal markers)
         #   2nd layer: current arrow positions and directions
         self.observation_space = spaces.Box(low=0, high=5+ARROW_FEATURE_NUM*num_arrows-1, shape=(self.H, self.W, 2), dtype=int)
@@ -43,44 +37,35 @@ class MoveArrowEnv(gym.Env):
         #   pick which arrow to move
         self.action_space = spaces.Discrete(num_arrows)
 
-        ## init state
-        self.state = np.zeros((self.H, self.W, 2), dtype=int)
-        # 1st layer
-        self.state[2, 4, 0] = DOWN
-        self.state[3, 2, 0] = RIGHT
-        self.state[4, 1, 0] = RIGHT
-        self.state[5, 2, 0] = UP
-        self.state[3, 4, 0] = self._feature2meta((0, GOAL))
-        self.state[4, 3, 0] = self._feature2meta((1, GOAL))
-        self.state[4, 5, 0] = self._feature2meta((2, GOAL))
-        # 2nd layer
-        self.state[4, 4, 1] = self._feature2meta((0, LEFT))
-        self.state[5, 3, 1] = self._feature2meta((1, LEFT))
-        self.state[5, 5, 1] = self._feature2meta((2, LEFT))
+    def __load_config(self, config: dict):
+        ## map shape
+        H, W = config['shape']
+        # create an empty map
+        state = np.zeros((H, W, 2), dtype=int)
 
-        # get arrows dict
-        #   arrow idx -> [arrow dir, arrow pos]
-        self.arrows = self._get_arrows()
+        ## env direction signs
+        for (i, j, direction) in config['signs']:
+            assert direction in DIRECTIONS
+            state[i, j, 0] = direction
 
-        # init step counter
-        self.step_counter = 0
+        ## movable arrows
+        for (idx, arrow) in enumerate(config['arrows']):
+            goal, start = arrow
+
+            # 1st layer
+            i, j = goal
+            state[i, j, 0] = self._feature2meta((idx, GOAL))
+
+            # 2nd layer
+            i, j, direction = start
+            state[i, j, 1] = self._feature2meta((idx, direction))
+
+        return H, W, state
 
     def reset(self):
 
-        ## init state
-        self.state = np.zeros((self.H, self.W, 2), dtype=int)
-        # 1st layer
-        self.state[2, 4, 0] = DOWN
-        self.state[3, 2, 0] = RIGHT
-        self.state[4, 1, 0] = RIGHT
-        self.state[5, 2, 0] = UP
-        self.state[3, 4, 0] = self._feature2meta((0, GOAL))
-        self.state[4, 3, 0] = self._feature2meta((1, GOAL))
-        self.state[4, 5, 0] = self._feature2meta((2, GOAL))
-        # 2nd layer
-        self.state[4, 4, 1] = self._feature2meta((0, LEFT))
-        self.state[5, 3, 1] = self._feature2meta((1, LEFT))
-        self.state[5, 5, 1] = self._feature2meta((2, LEFT))
+        # load env config as a state
+        self.H, self.W, self.state = self.__load_config(self.env_config)
 
         # get arrows dict
         #   arrow idx -> [arrow dir, arrow pos]
@@ -296,11 +281,10 @@ class MoveArrowEnv(gym.Env):
         self._update_arrow_states()
 
 if __name__ == '__main__':
-    opt_actions = [0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 2, 1, 1, 1]
-    env = MoveArrowEnv()
+    env = MoveArrowEnv(env_config=ENV_CONFIG_0)
     obs = env.reset()
     env.render()
-    for act in opt_actions:
+    for act in OPT_ACTIONS_0:
         obs, r, done, info = env.step(act)
         env.render()
         print("reward = ", r)
