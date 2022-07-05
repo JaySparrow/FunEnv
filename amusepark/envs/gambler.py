@@ -1,8 +1,9 @@
+import gym
 from gym import spaces
 
 import numpy as np
 
-class CoinGameEnv:
+class CoinGameEnv(gym.Env):
     """ 2-Armed Bandit Env
     The banker and the player each has a coin. In one play, they need to show either face of their own coin simultaneously, and the result is dependent on the face combination.
     From the player's perspective:
@@ -32,7 +33,7 @@ class CoinGameEnv:
         -1: 'none'
     }
 
-    def __init__(self, deterministic=True):
+    def __init__(self, deterministic: bool=True):
         super(CoinGameEnv, self).__init__()
 
         # variables
